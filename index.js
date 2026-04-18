@@ -29,7 +29,8 @@ app.post("/webhook", (req, res) => {
         const sender_id = webhook_event.sender.id;
         const text = webhook_event.message.text;
 
-        sendMessage(sender_id, "Сайн байна уу 😊");
+        const reply = getSmartReply(text);
+sendMessage(sender_id, reply);
       }
     });
 
