@@ -53,3 +53,46 @@ async function sendMessage(sender, text) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Bot ажиллаж байна 🚀"));
+
+function getSmartReply(text) {
+    const msg = text.toLowerCase();
+  
+    // Сайн уу
+    if (msg.includes("сайн")) {
+      return random([
+        "Сайн байна уу 😊 Ямар зураг засуулах вэ?",
+        "Сайн байна уу 👋 Та ямар төрлийн зураг засуулах гэж байна?",
+        "Сайн уу 😊 Зургаа явуулбал үзээд хэлж өгье 👍"
+      ]);
+    }
+  
+    // Үнэ
+    if (msg.includes("үнэ")) {
+      return random([
+        "Манай үнэ 5000₮-с эхэлдэг 😊",
+        "Зургийн төрлөөс шалтгаална 👍 Зургаа явуулбал яг үнэ хэлж өгье",
+        "Ихэвчлэн 5k–20k хооронд байдаг 😊"
+      ]);
+    }
+  
+    // Засвар
+    if (msg.includes("зас")) {
+      return random([
+        "Тийм үйлчилгээ хийдэг 😊 Зургаа явуулна уу",
+        "Засвар хийж өгнө 👍 Ямар төрлийн засвар вэ?",
+        "Болно 😊 Зургaa явуулбал шууд эхэлж болно"
+      ]);
+    }
+  
+    // Default
+    return random([
+      "Зургаа явуулбал үзээд хэлж өгье 😊",
+      "Илүү тодорхой бичвэл тусалж чадна 👍",
+      "Ямар зураг засуулах гэж байна вэ?"
+    ]);
+  }
+  
+  // random helper
+  function random(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
