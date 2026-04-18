@@ -1,0 +1,10 @@
+{
+  "name": "ai-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.22.1",
+    "node-fetch": "^3.3.2"
+  }
+}
