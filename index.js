@@ -15,7 +15,7 @@ app.get("/webhook", (req, res) => {
   res.sendStatus(403);
 });
 
-// ✅ MESSAGE + COMMENT RECEIVE (POST)
+// ✅ WEBHOOK (MESSAGE + COMMENT)
 app.post("/webhook", (req, res) => {
   console.log("🔥 EVENT:", JSON.stringify(req.body, null, 2));
 
@@ -24,19 +24,20 @@ app.post("/webhook", (req, res) => {
   if (body.object === "page") {
     body.entry.forEach(entry => {
 
-      // 🔥 COMMENT HANDLE (шинэ нэмсэн хэсэг)
+      // 🔥 COMMENT HANDLE (SAFE)
       if (entry.changes) {
         entry.changes.forEach(change => {
-          if (change.field === "feed") {
+          if (
+            change.field === "feed" &&
+            change.value &&
+            change.value.comment_id
+          ) {
             const commentId = change.value.comment_id;
-            const message = change.value.message;
+            const message = change.value.message || "";
 
             console.log("💬 COMMENT:", message);
 
-            // 👍 Like comment
             likeComment(commentId);
-
-            // 💬 Reply comment (SAFE for review)
             replyComment(
               commentId,
               "Сайн байна уу 😊 дэлгэрэнгүй мэдээллийг inbox-р бичээрэй"
@@ -45,17 +46,17 @@ app.post("/webhook", (req, res) => {
         });
       }
 
-      // 🔥 MESSENGER MESSAGE HANDLE
-      if (entry.messaging) {
-        const webhook_event = entry.messaging[0];
+      // 🔥 MESSENGER HANDLE (SAFE)
+      if (entry.messaging && entry.messaging.length > 0) {
+        entry.messaging.forEach(event => {
+          if (event.message && event.message.text) {
+            const sender_id = event.sender.id;
+            const text = event.message.text;
 
-        if (webhook_event.message && webhook_event.message.text) {
-          const sender_id = webhook_event.sender.id;
-          const text = webhook_event.message.text;
-
-          const reply = getSmartReply(text);
-          sendMessage(sender_id, reply);
-        }
+            const reply = getSmartReply(text);
+            sendMessage(sender_id, reply);
+          }
+        });
       }
 
     });
@@ -68,42 +69,54 @@ app.post("/webhook", (req, res) => {
 
 // ✅ SEND MESSAGE
 async function sendMessage(sender, text) {
-  await fetch(
-    `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_TOKEN}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipient: { id: sender },
-        message: { text }
-      })
-    }
-  );
+  try {
+    await fetch(
+      `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient: { id: sender },
+          message: { text }
+        })
+      }
+    );
+  } catch (err) {
+    console.log("❌ sendMessage error:", err);
+  }
 }
 
 // 👍 LIKE COMMENT
 async function likeComment(commentId) {
-  await fetch(
-    `https://graph.facebook.com/v18.0/${commentId}/likes?access_token=${PAGE_TOKEN}`,
-    {
-      method: "POST"
-    }
-  );
+  try {
+    await fetch(
+      `https://graph.facebook.com/v18.0/${commentId}/likes?access_token=${PAGE_TOKEN}`,
+      {
+        method: "POST"
+      }
+    );
+  } catch (err) {
+    console.log("❌ like error:", err);
+  }
 }
 
 // 💬 REPLY COMMENT
 async function replyComment(commentId, text) {
-  await fetch(
-    `https://graph.facebook.com/v18.0/${commentId}/comments?access_token=${PAGE_TOKEN}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    }
-  );
+  try {
+    await fetch(
+      `https://graph.facebook.com/v18.0/${commentId}/comments?access_token=${PAGE_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      }
+    );
+  } catch (err) {
+    console.log("❌ reply error:", err);
+  }
 }
 
-// 🚀 SERVER START
+// 🚀 SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Bot ажиллаж байна 🚀"));
 
